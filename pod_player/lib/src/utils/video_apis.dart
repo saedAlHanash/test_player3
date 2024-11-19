@@ -7,6 +7,7 @@ import 'package:http/http.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 import '../models/vimeo_models.dart';
+import 'dailymotion_response.dart';
 
 String podErrorString(String val) {
   return '*\n------error------\n\n$val\n\n------end------\n*';
@@ -43,9 +44,11 @@ class VideoApis {
 
       for (final item in rawStreamUrls) {
         final sepList = cdnVideoUrl.split('/sep/video/');
-        final lastUrlPiece = ((sepList.lastOrNull ?? '').split('/').lastOrNull) ??
-            (sepList.lastOrNull ?? '');
-        final String urlId = ((item['id'] ?? '') as String).split('-').firstOrNull ?? '';
+        final lastUrlPiece =
+            ((sepList.lastOrNull ?? '').split('/').lastOrNull) ??
+                (sepList.lastOrNull ?? '');
+        final String urlId =
+            ((item['id'] ?? '') as String).split('-').firstOrNull ?? '';
         vimeoQualityUrls.add(
           VideoQalityUrls(
             quality: int.parse(
@@ -87,7 +90,8 @@ class VideoApis {
         Uri.parse('https://api.vimeo.com/videos/$videoId'),
         headers: httpHeader,
       );
-      final jsonData = (jsonDecode(response.body)['files'] as List<dynamic>?) ?? [];
+      final jsonData =
+          (jsonDecode(response.body)['files'] as List<dynamic>?) ?? [];
 
       final List<VideoQalityUrls> list = [];
 
@@ -136,7 +140,8 @@ class VideoApis {
           ),
         );
       } else {
-        final manifest = await yt.videos.streamsClient.getManifest(youtubeIdOrUrl);
+        final manifest =
+            await yt.videos.streamsClient.getManifest(youtubeIdOrUrl);
         urls.addAll(
           manifest.muxed.map(
             (element) => VideoQalityUrls(
@@ -181,34 +186,75 @@ class VideoApis {
       final json = jsonDecode(response.body);
       if (json['stream_h264_hd1080_url'] != null) {
         urls.add(
-          VideoQalityUrls(quality: 1080, url: json['stream_h264_hd1080_url'].toString()),
+          VideoQalityUrls(
+              quality: 1080, url: json['stream_h264_hd1080_url'].toString()),
         );
       }
       if (json['stream_h264_hd_url'] != null) {
         urls.add(
-          VideoQalityUrls(quality: 720, url: json['stream_h264_hd_url'].toString()),
+          VideoQalityUrls(
+              quality: 720, url: json['stream_h264_hd_url'].toString()),
         );
       }
       if (json['stream_h264_hq_url'] != null) {
         urls.add(
-          VideoQalityUrls(quality: 480, url: json['stream_h264_hq_url'].toString()),
+          VideoQalityUrls(
+              quality: 480, url: json['stream_h264_hq_url'].toString()),
         );
       }
       if (json['stream_h264_qhd_url'] != null) {
         urls.add(
-          VideoQalityUrls(quality: 360, url: json['stream_h264_qhd_url'].toString()),
+          VideoQalityUrls(
+              quality: 360, url: json['stream_h264_qhd_url'].toString()),
         );
       }
       if (json['stream_h264_l2_url'] != null) {
         urls.add(
-          VideoQalityUrls(quality: 240, url: json['stream_h264_l2_url'].toString()),
+          VideoQalityUrls(
+              quality: 240, url: json['stream_h264_l2_url'].toString()),
         );
       }
       if (json['stream_h264_url'] != null) {
         urls.add(
-          VideoQalityUrls(quality: 144, url: json['stream_h264_url'].toString()),
+          VideoQalityUrls(
+              quality: 144, url: json['stream_h264_url'].toString()),
         );
       }
+      return urls;
+    } catch (error) {
+      if (error.toString().contains('XMLHttpRequest')) {
+        log(
+          podErrorString(
+            '(INFO) To play youtube video in WEB, Please enable CORS in your browser',
+          ),
+        );
+      }
+      debugPrint('===== YOUTUBE API ERROR: $error ==========');
+      rethrow;
+    }
+  }
+
+  static Future<List<VideoQalityUrls>?> getDailymotionVideoQualityM3U8Urls(
+    String vId,
+  ) async {
+    try {
+      final urls = <VideoQalityUrls>[];
+      final response = await http.get(
+        Uri.parse(
+          'https://www.dailymotion.com/player/metadata/video/$vId',
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'Application/json',
+        },
+      );
+
+      final result = DailymotionResponse.fromJson(jsonDecode(response.body));
+      final f = await http.get(
+        Uri.parse(result.qualities?.auto.firstOrNull?.url ?? ''),
+      );
+      final s = f.body;
+
       return urls;
     } catch (error) {
       if (error.toString().contains('XMLHttpRequest')) {

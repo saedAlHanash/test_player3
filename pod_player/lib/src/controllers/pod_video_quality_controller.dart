@@ -108,14 +108,15 @@ class _PodVideoQualityController extends _PodVideoController {
     String youtubeIdOrUrl,
     bool live,
   ) async {
-    return await VideoApis.getYoutubeVideoQualityUrls(youtubeIdOrUrl, live) ?? [];
+    return await VideoApis.getYoutubeVideoQualityUrls(youtubeIdOrUrl, live) ??
+        [];
   }
 
   Future<List<VideoQalityUrls>> getVideoQualityUrlsFromDailymotion(
     String vId,
     String token,
   ) async {
-    return await VideoApis.getDailymotionVideoQualityUrls(vId, token) ?? [];
+    return await VideoApis.getDailymotionVideoQualityM3U8Urls(vId) ?? [];
   }
 
   Future<void> changeVideoQuality(int? quality) async {
@@ -123,8 +124,10 @@ class _PodVideoQualityController extends _PodVideoController {
       throw Exception('videoQuality cannot be empty');
     }
     if (vimeoPlayingVideoQuality != quality) {
-      _videoQualityUrl =
-          vimeoOrVideoUrls.where((element) => element.quality == quality).first.url;
+      _videoQualityUrl = vimeoOrVideoUrls
+          .where((element) => element.quality == quality)
+          .first
+          .url;
       podLog(_videoQualityUrl);
       vimeoPlayingVideoQuality = quality;
       _videoCtr?.removeListener(videoListner);

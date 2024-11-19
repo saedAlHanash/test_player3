@@ -123,18 +123,26 @@ class PodGetXVideoController extends _PodGesturesController {
           qualityList: podPlayerConfig.videoQualityPriority,
           videoUrls: urls,
         );
+        _videoCtr = VideoPlayerController.networkUrl(
+          Uri.parse(url),
+          closedCaptionFile: playVideoFrom.closedCaptionFile,
+          formatHint: playVideoFrom.formatHint,
+          videoPlayerOptions: playVideoFrom.videoPlayerOptions,
+          httpHeaders: playVideoFrom.httpHeaders,
+        );
+        playingVideoUrl = url;
 
       case PodVideoPlayerType.dailymotion:
         final urls = await getVideoQualityUrlsFromDailymotion(
           playVideoFrom.dataSource!,
           playVideoFrom.token!,
         );
+
         final url = await getUrlFromVideoQualityUrls(
           qualityList: podPlayerConfig.videoQualityPriority,
           videoUrls: urls,
         );
 
-        ///
         _videoCtr = VideoPlayerController.networkUrl(
           Uri.parse(url),
           closedCaptionFile: playVideoFrom.closedCaptionFile,
