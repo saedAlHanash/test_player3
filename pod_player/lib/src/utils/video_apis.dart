@@ -254,7 +254,38 @@ class VideoApis {
         Uri.parse(result.qualities?.auto.firstOrNull?.url ?? ''),
       );
       final s = f.body;
+      // Regular expression to match EXT-X-STREAM-INF lines and URLs
+      RegExp pattern = RegExp(
+          r'#EXT-X-STREAM-INF:[^\n]+,NAME="(\d+)"\n(https?://[^\s]+\.m3u8)');
 
+      // Find all matches
+      Iterable<RegExpMatch> matches = pattern.allMatches(s);
+
+      // Create the Map to store quality (key) and URL (value)
+      Map<String, String> qualityToUrlMap = {};
+
+      // Iterate over matches and populate the map
+      for (var match in matches) {
+        // Extract the quality (stream resolution) from the metadata
+        String quality = match.group(1) ?? '';
+
+        // Extract the URL (second match)
+        String url = match.group(2) ?? '';
+
+        // Add the quality and URL to the map
+        qualityToUrlMap[quality] = url;
+      }
+
+      qualityToUrlMap.forEach(
+        (key, value) {
+          urls.add(
+            VideoQalityUrls(
+              quality: int.tryParse(key) ?? 0,
+              url: value,
+            ),
+          );
+        },
+      );
       return urls;
     } catch (error) {
       if (error.toString().contains('XMLHttpRequest')) {
